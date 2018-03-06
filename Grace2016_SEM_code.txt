@@ -1,0 +1,587 @@
+### GRACE_ETAL_NATURE_SUPPLEMENTARYINFORMATION_RCODE - Full Code
+### Last Updated November 22, 2015
+
+# Set working directory
+setwd("F:/ms/_Grace/NUTNET_SEM_Paper/Nature_take2/_Final Post-Acceptance Version/Files for Upload")
+
+
+###########################################################
+################ FIGURE 1-I BIVARIATE PLOT ################
+plot.dat <- read.csv("Grace_SI_PlotLevelVars.csv") # read in plot-level data with raw vars
+
+# Create data object and rename variables for clarity
+fig1.I.dat <- with(plot.dat, data.frame(psitecode))
+names(fig1.I.dat)[names(fig1.I.dat)=="psitecode"] <- "PlotSiteCode"
+fig1.I.dat$PlotRichRaw  <- plot.dat$prich
+fig1.I.dat$PlotProdRaw  <- plot.dat$pprod
+fig1.I.dat$SiteRichRaw  <- plot.dat$site.rich
+summary(fig1.I.dat)
+
+# Sort the graph data by site richness
+sorted.fig1.I.dat <- fig1.I.dat[order(fig1.I.dat$SiteRichRaw),]
+
+### Create Modified Rainbow Palette
+library(RColorBrewer)
+n=39
+palette("rainbow"(n, s = 1, v = 1, start = 1/6, end = max(1,n - 1)/n, alpha = 1))
+
+# set preliminaries and develop figure
+pointtype <- factor(sorted.fig1.I.dat$SiteRichRaw)
+par(bg="white")
+dev.new(width=5, height=5); par(mfrow=c(1,1))
+plot(sorted.fig1.I.dat$PlotRichRaw ~ sorted.fig1.I.dat$PlotProdRaw, ylim=c(0,50), 
+ cex.main=1.3, font.main=1, pch=21, col="black", main="", bg=as.numeric(pointtype),lwd=1.5,
+ xlab="Annual productivity, grams",ylab="Species richness",cex.lab=1.4,cex=1.2,cex.axis=1.2)
+
+# Output data for Fig. 1 - Panel I
+#write.csv(sorted.fig1.I.dat, "Fig1_Panel_I_data.csv") # Just showing code here. Data file is provided with figure.
+
+################ END OF FIGURE 1-I BIVARIATE PLOT CODE ################
+
+
+#########################################################################
+################ FIGURE 2 SITE-LEVEL COMPONENTS OF MODEL ################
+# read site data
+site.dat <- read.csv("Grace_SI_SiteLevelVars.csv")
+
+# Create data object and rename variables for clarity
+site.sem.dat <- with(site.dat, data.frame(site.code))
+names(site.sem.dat)[names(site.sem.dat)=="site.code"] <- "SiteCode"
+site.sem.dat$SiteRich       <- site.dat$ln.rich
+site.sem.dat$SiteBiomass    <- site.dat$ln.totmass
+site.sem.dat$SiteProd       <- site.dat$ln.prod
+site.sem.dat$Heterogeneity  <- site.dat$hetero
+site.sem.dat$Disturb.anthro <- site.dat$anthro #anthropogenic disturbance
+site.sem.dat$Disturb.herbiv <- site.dat$ln.disturbance
+site.sem.dat$SiteSoilSuit   <- site.dat$SoilSuitability
+site.sem.dat$ClimateOnRich  <- site.dat$mapwarmq #mapwarq is mean annual precipitation in warmest quarter
+site.sem.dat$PrecipWarmQuarter <- site.dat$mapwarmq
+site.sem.dat$Precip.cube    <- site.dat$Precip.cube
+site.sem.dat$SiteSoilFert   <- site.dat$SoilFertility
+site.sem.dat$ClimateOnProd  <- site.dat$ClimateOnProd
+site.sem.dat$TempWetQuarter <- site.dat$tempwetq.tenth
+site.sem.dat$Sand <- site.dat$sand.prop
+site.sem.dat$Silt <- site.dat$silt.prop
+site.sem.dat$PH   <- site.dat$ph
+site.sem.dat$LogP <- site.dat$ln.p
+site.sem.dat$LogC <- site.dat$ln.c
+site.sem.dat$LogN <- site.dat$ln.n
+site.sem.dat$LogK <- site.dat$ln.k
+names(site.sem.dat)
+
+attach(site.sem.dat)
+
+## LAVAAN CODE FOR SITE-LEVEL MODEL 
+library(lavaan)
+
+sitemod <- 'SiteRich ~ SiteBiomass +Heterogeneity  +Disturb.anthro +SiteSoilSuit +ClimateOnRich
+            SiteBiomass ~ SiteProd +Disturb.herbiv 
+            SiteProd ~  SiteRich +SiteSoilFert +ClimateOnProd
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod.fit <- sem(sitemod, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE)  # run model
+summary(sitemod.fit)
+standardizedSolution(sitemod.fit)
+
+#Select Correlations of interest
+cor.test(SiteSoilSuit, SiteSoilFert)  # -0.56
+cor.test(SiteSoilSuit, ClimateOnProd) # 0.30ns
+cor.test(SiteSoilFert, ClimateOnProd) # -0.52
+cor.test(ClimateOnProd, ClimateOnRich)# -0.43
+
+## PREDICTION EQUATIONS FOR SITE-LEVEL MODEL
+SiteRich.pred       <-  1.005 -0.742*SiteBiomass +0.583*Heterogeneity  -0.127*Disturb.anthro +1.00*SiteSoilSuit  +0.099*ClimateOnRich
+SiteBiomass.pred    <-  0.036 +1.422*SiteProd -0.028*Disturb.herbiv
+SiteRich.resid      <-  SiteRich -SiteRich.pred      #using residual richness as a predictor of productivity because of causal loop
+SiteProd.pred.final <-  0.058 +0.530*SiteRich.resid +1.00*SiteSoilFert +0.99*ClimateOnProd  #actual predicted scores
+
+## VARIANCE EXPLANATION
+summary(lm(SiteRich ~ SiteRich.pred))        #Adjusted R-squared:  0.6137
+summary(lm(SiteBiomass ~ SiteBiomass.pred))  #Adjusted R-squared:  0.7313
+summary(lm(SiteProd ~ SiteProd.pred.final))  #Adjusted R-squared:  0.3614
+
+
+############ FIGURE 1-II, Subfigures A-C. SITE-LEVEL PARTIAL RELATIONSHIPS 
+## REPEATING PREDICTION EQUATIONS FOR SITE-LEVEL MODEL FOR REFERENCE IN THIS SECTION
+#SiteRich.pred       <-  1.005 -0.742*SiteBiomass +0.583*Heterogeneity  -0.127*Disturb.anthro +1.00*SiteSoilSuit  +0.099*ClimateOnRich
+#SiteBiomass.pred    <-  0.036 +1.422*SiteProd -0.028*Disturb.herbiv
+#SiteRich.resid      <-  SiteRich -SiteRich.pred      #using residual richness as a predictor of productivity because of causal loop
+#SiteProd.pred.final <-  0.058 +0.530*SiteRich.resid +1.00*SiteSoilFert +0.99*ClimateOnProd  #actual predicted scores
+
+### Partial Effect of SiteBiomass on SiteRich
+# Residuals for SiteRich ignoring SiteMass
+SiteRich.resid.NoMass <- SiteRich - (1.005 +0.583*Heterogeneity  -0.127*Disturb.anthro +1.00*SiteSoilSuit  +0.099*ClimateOnRich)
+# Crude plot of residual relationship
+plot(SiteRich.resid.NoMass ~ SiteBiomass,pch=16,); reg1 <- lm(SiteRich.resid.NoMass ~ SiteBiomass); abline(reg1,lwd=2)
+
+### Partial Effect of SiteRich on SiteProd
+#requires use of residual SiteRich because of causal loop
+## computing double-loop residualization for effect of richness on productivity
+SiteRich.resid.all    <- SiteRich - (1.005 -0.742*SiteBiomass +0.583*Heterogeneity  -0.127*Disturb.anthro +1.00*SiteSoilSuit  +0.099*ClimateOnRich)  
+SiteProd.resid.all    <- SiteProd - (0.058 +0.530*SiteRich.resid.all +1.00*SiteSoilFert +0.99*ClimateOnProd)
+SiteBiomass.resid.all <- SiteBiomass - (0.036 +1.422*SiteProd.resid.all -0.028*Disturb.herbiv)
+SiteRich.adjusted     <- 1.005 -0.742*SiteBiomass.resid.all +0.583*Heterogeneity -0.127*Disturb.anthro +1.00*SiteSoilSuit  +0.099*ClimateOnRich 
+# Crude plot of residual relationship
+plot(SiteProd.resid.all ~ SiteRich.adjusted,pch=16,); reg2 <- lm(SiteProd.resid.all ~ SiteRich.adjusted); abline(reg2,lwd=2)
+
+## Partial Effect of Precipitation on SiteRich
+SiteRich.resid.NoPrecip <- SiteRich - (1.005 -0.742*SiteBiomass +0.583*Heterogeneity  -0.127*Disturb.anthro +1.00*SiteSoilSuit)
+plot(SiteRich.resid.NoPrecip ~ ClimateOnRich,pch=16,main="Residual Relationship with Precipitation"); 
+ reg3 <- lm(SiteRich.resid.NoPrecip ~ ClimateOnRich); abline(reg3,lwd=2)
+
+
+### CREATING FIGURES 1-II, SUBFIGURES A-C - SITE-LEVEL PARTIAL PLOTS
+# Create data object with the variables being used
+fig1.ABC.dat <- data.frame(SiteCode, SiteProd, SiteRich, SiteBiomass, ClimateOnRich, 
+                           SiteRich.resid.NoMass, SiteProd.resid.all, SiteRich.adjusted, SiteRich.resid.NoPrecip)
+# Sort the graph data by site richness
+sorted.fig1.ABC.dat <- fig1.ABC.dat[order(fig1.ABC.dat$SiteRich),]
+
+# standardize variables
+SiteProd.std <- (SiteProd - mean(SiteProd))/sd(SiteProd)
+SiteRich.std <- (SiteRich - mean(SiteRich))/sd(SiteRich)
+SiteRich.resid.NoMass.std <- (SiteRich.resid.NoMass - mean(SiteRich.resid.NoMass))/sd(SiteRich.resid.NoMass)
+SiteBiomass.std <- (SiteBiomass - mean(SiteBiomass))/sd(SiteBiomass)
+SiteProd.resid.all.std <- (SiteProd.resid.all - mean(SiteProd.resid.all))/sd(SiteProd.resid.all)
+SiteRich.adjusted.std <- (SiteRich.adjusted - mean(SiteRich.adjusted))/sd(SiteRich.adjusted)
+SiteRich.resid.NoPrecip.std <- (SiteRich.resid.NoPrecip - mean(SiteRich.resid.NoPrecip))/sd(SiteRich.resid.NoPrecip)
+ClimateOnRich.std <- (ClimateOnRich - mean(ClimateOnRich))/sd(ClimateOnRich)
+
+# create data.frame for data behind Fig1_Panel_II_ABC
+fig1.ABC.standardized.dat <- data.frame(SiteCode, SiteProd.std, SiteRich.std, SiteBiomass.std, ClimateOnRich.std, 
+                           SiteRich.resid.NoMass.std, SiteProd.resid.all.std, SiteRich.adjusted.std, SiteRich.resid.NoPrecip.std)
+
+# Create color palette
+library(RColorBrewer)
+n=39
+palette("rainbow"(n, s = 1, v = 1, start = 1/6, end = max(1,n - 1)/n, alpha = 1))
+# Create pointtype
+Spointtype <- factor(SiteRich.std) 
+
+## Three Site-Level Partial Plots
+dev.new(width=9, height=3)
+par(mfrow=c(1,3))
+plot(SiteRich.resid.NoMass.std ~ SiteBiomass.std, ylab="Site richness", xlab="Site biomass", cex.lab=1.4, cex=1.5, cex.axis=1.3, pch=21, col="black", 
+     bg=as.numeric(Spointtype)); abline(lm(SiteRich.resid.NoMass.std ~ SiteBiomass.std),lwd=2);              
+plot(SiteProd.resid.all.std ~ SiteRich.adjusted.std,ylab="Site productivity", xlab="Site richness",cex.lab=1.4, cex=1.5,cex.axis=1.3, pch=21, 
+     col="black", bg=as.numeric(Spointtype)); reg26d <- lm(SiteProd.resid.all.std ~ SiteRich.adjusted.std); abline(reg26d,lwd=2); 
+plot(SiteRich.resid.NoPrecip.std ~ ClimateOnRich.std,ylab="Site richness",xlab="Mean annual precipitation",cex.lab=1.4, cex=1.5,cex.axis=1.3, 
+     pch=21, col="black", bg=as.numeric(Spointtype)); abline(lm(SiteRich.resid.NoPrecip.std ~ ClimateOnRich.std),lwd=2); 
+
+# Write csv file for data behind Fig1_Panel_II_ABC
+#write.csv(fig1.ABC.standardized.dat, "Fig1_Panel_II_ABC.csv") # Just showing code here. Data file is provided with figure.
+
+############ END OF CODE FOR SITE-LEVEL MODEL (for now) ###############
+detach(site.sem.dat)
+
+
+#########################################################################
+################ FIGURE 2 PLOT-LEVEL COMPONENTS OF MODEL ################
+# be sure to remove all site-level objects before running plot-level model
+
+# read plot data
+plot.dat<-read.csv("Grace_SI_PlotLevelVars.csv")  
+
+# Create data object and rename variables for clarity
+plot.sem.dat <- with(plot.dat, data.frame(psitecode))
+names(plot.sem.dat)[names(plot.sem.dat)=="psitecode"] <- "PlotSiteCode"
+plot.sem.dat$PlotRichRaw    <- plot.dat$prich
+plot.sem.dat$PlotRich       <- plot.dat$ln.prich
+plot.sem.dat$SiteRich       <- plot.dat$ln.site.rich
+plot.sem.dat$PlotProdRaw    <- plot.dat$pprod
+plot.sem.dat$PlotProd       <- plot.dat$ln.pprod
+plot.sem.dat$SiteProd       <- plot.dat$ln.site.prod
+plot.sem.dat$PlotBiomass    <- plot.dat$ln.ptotmass
+plot.sem.dat$SiteBiomass    <- plot.dat$ln.site.totmass
+plot.sem.dat$PlotShade      <- plot.dat$ln.pshade
+plot.sem.dat$PlotSoilSuit   <- plot.dat$SoilSuitability
+plot.sem.dat$SoilWithShade  <- plot.dat$SoilWithShade #control variable for soil influences on effectiveness of shading
+plot.sem.dat$PlotN          <- plot.dat$pn
+plot.sem.dat$PlotN.sqr      <- plot.dat$sqr.pn
+plot.sem.dat$PlotN.ln       <- plot.dat$ln.pn
+plot.sem.dat$PlotP.ln       <- plot.dat$ln.pp
+plot.sem.dat$PlotC.ln       <- plot.dat$ln.pc
+names(plot.sem.dat)
+
+attach(plot.sem.dat)
+
+
+########## Unimodal bivariate relationship between productivity and richness for comparison to SEM results
+library(nlme)
+
+### Ricker nonlinear model - ignoring data nesting
+ricker.fit <- nls(PlotRichRaw ~ (PlotProdRaw^k_3)*k_1*exp(-k_2*PlotProdRaw), start=list(k_1=0.1,k_2=1/400,k_3=1))
+summary(ricker.fit)
+
+# Calculate R-square using variance-based formulae (defined as 1-SSE/SST) for Ricker model 
+SSTotal <- sum((PlotRichRaw-mean(PlotRichRaw))^2)
+SSE.ricker <- sum(summary(ricker.fit)$residuals^2)
+print(R2.ricker <- 1 - SSE.ricker / SSTotal) # yields Rsqr = 0.1003
+
+# Calculate R-square using Predict-Observe approximation approach (for validation)
+yhat <- PlotProdRaw^0.6504485 * 0.7134546 * exp(-0.0020297*PlotProdRaw)
+a=list(summary(lm(PlotRichRaw ~ yhat)))
+a[[1]]$r.squared # yields Rsqr = 0.1007
+
+### Ricker nonlinear model accounting for data nesting
+ricker.mixed.fit <- nlme(PlotRichRaw ~ (PlotProdRaw^k_3)*k_1*exp(-k_2*PlotProdRaw),
+ fixed = k_1 + k_2 + k_3 ~ 1, random = k_1 + k_2 + k_3 ~ 1|PlotSiteCode, start=c(k_1=0.17, k_2=.0046, k_3=1))
+summary(ricker.mixed.fit)
+
+# Calculate R-square using Predict-Observe approximation approach 
+yhat.fixed <- (PlotProdRaw^0.153659) * 6.235439 * exp(-0.000576*PlotProdRaw) 
+a.fixed=list(summary(lm(PlotRichRaw ~ yhat.fixed))) 
+a.fixed[[1]]$r.squared # yields Rsqr = 0.081
+
+
+######### LAVAAN CODE FOR PLOT-LEVEL MODEL                           
+library(lavaan)
+library(lavaan.survey)
+
+# plot-level model
+plotmod <-  'PlotRich ~ SiteRich +PlotShade +PlotSoilSuit 
+             PlotShade   ~ PlotBiomass +SoilWithShade 
+             PlotBiomass ~ SiteBiomass +PlotProd  
+             PlotProd ~  SiteProd +PlotRich                                     
+             PlotProd ~~ PlotBiomass #controlling for error correlation
+             '
+plotmod.fit <- sem(plotmod, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.designplot <- svydesign(ids=~PlotSiteCode, nest=TRUE, data=plot.sem.dat)
+survey.fit.plot <- lavaan.survey(lavaan.fit=plotmod.fit, survey.design=survey.designplot)
+survey.fit.plot  # gives chi-square
+summary(survey.fit.plot)
+standardizedSolution(survey.fit.plot)
+
+## PREDICTION EQUATIONS FOR PLOT-LEVEL MODEL
+PlotRich.pred     <-  -0.015 +0.650*SiteRich -0.839*PlotShade +0.999*PlotSoilSuit 
+PlotShade.pred    <-  -0.334 +0.142*PlotBiomass +1.0*SoilWithShade
+PlotBiomass.pred  <-  -0.177 +1.018*SiteBiomass +0.001*PlotProd
+PlotRich.resid    <-   PlotRich-PlotRich.pred  # getting richness residual for prediction
+PlotProd.pred     <-  -0.208 +1.012*SiteProd +0.025*PlotRich.resid 
+
+## VARIANCE EXPLANATION
+summary(lm(PlotProd ~ PlotProd.pred))         
+summary(lm(PlotBiomass ~ PlotBiomass.pred))   
+summary(lm(PlotShade ~ PlotShade.pred))       
+summary(lm(PlotRich ~ PlotRich.pred))         
+
+
+### CREATING FIGURES 1-II, SUBFIGURES DEF - PLOT-LEVEL PARTIAL PLOTS
+## Preliminaries (prediction equations repeated here from above)
+PlotRich.pred      <-  -0.015 +0.650*SiteRich -0.839*PlotShade +0.999*PlotSoilSuit 
+PlotShade.pred     <-  -0.334 +0.142*PlotBiomass +1.0*SoilWithShade
+PlotBiomass.pred   <-  -0.177 +1.018*SiteBiomass +0.001*PlotProd
+PlotRich.resid     <-  PlotRich-PlotRich.pred 
+PlotProd.pred      <-  -0.210 +1.012*SiteProd +0.025*PlotRich.resid 
+
+# Create data object with the variables being used
+fig1.DEF.dat <- data.frame(PlotSiteCode, SiteRich, PlotRich, PlotShade, SiteProd, PlotProd, PlotBiomass, PlotRich.resid)
+# Sort the graph data by site richness
+sorted.fig1.DEF.dat <- fig1.DEF.dat[order(fig1.DEF.dat$SiteRich),]
+
+### MAKING THE FIGURES
+library(RColorBrewer)
+n=39
+palette("rainbow"(n, s = 1, v = 1, start = 1/6, end = max(1,n - 1)/n, alpha = 1))
+# Create pointtype
+Ppointtype <- factor(SiteRich) 
+
+# Plot the graph
+dev.new(width=9, height=3)
+par(mfrow=c(1,3))
+# "D" residual relationship between total biomass and shading
+PlotShade.resid.NoMass    <- PlotShade - (-0.334 +1.0*SoilWithShade)
+PlotShade.resid.NoMass.std <- (PlotShade.resid.NoMass - mean(PlotShade.resid.NoMass))/sd(PlotShade.resid.NoMass); 
+PlotBiomass.std <- (PlotBiomass - mean(PlotBiomass))/sd(PlotBiomass) 
+plot(PlotShade.resid.NoMass.std ~ PlotBiomass.std,ylab="Plot shading",xlab="Plot biomass",cex.lab=1.5,cex=1.2,cex.axis=1.3, pch=21, col="black", 
+bg=as.numeric(Ppointtype)); reg22 <- lm(PlotShade.resid.NoMass.std ~ PlotBiomass.std); abline(reg22,lwd=2) 
+
+# "E" residual relationship between shade and richness
+PlotRich.resid.NoShade  <- PlotRich - (-0.015 +0.650*SiteRich +0.999*PlotSoilSuit)
+PlotRich.resid.NoShade.std <- (PlotRich.resid.NoShade - mean(PlotRich.resid.NoShade))/sd(PlotRich.resid.NoShade); 
+PlotShade.std <- (PlotShade - mean(PlotShade))/sd(PlotShade);
+plot(PlotRich.resid.NoShade.std ~ PlotShade.std,ylab="Plot richness",xlab="Plot shading",cex.lab=1.5,cex=1.2,cex.axis=1.3, pch=21, col="black", 
+ bg=as.numeric(Ppointtype)); reg21 <- lm(PlotRich.resid.NoShade.std ~ PlotShade.std); abline(reg21,lwd=2); 
+
+# "F" partial effect of plot richness on plot productivity
+PlotProd.resid.NoRich     <- PlotProd - (-0.210 +1.012*SiteProd) 
+PlotProd.resid.NoRich.std <- (PlotProd.resid.NoRich - mean(PlotProd.resid.NoRich))/sd(PlotProd.resid.NoRich); 
+PlotRich.resid.std <- (PlotRich.resid - mean(PlotRich.resid))/sd(PlotRich.resid) 
+plot(PlotProd.resid.NoRich.std ~ PlotRich.resid.std,ylab="Plot productivity",xlab="Plot richness",
+ cex.lab=1.5,cex=1.2,cex.axis=1.3, pch=21, col="black", bg=as.numeric(Ppointtype)); 
+reg26 <- lm(PlotProd.resid.NoRich.std ~ PlotRich.resid.std); abline(reg26,lwd=2); # classic line
+
+# create data.frame for data behind Fig1_Panel_II_DEF
+fig1.DEF.sorted.standardized.dat <- data.frame(PlotSiteCode, PlotShade.resid.NoMass.std, PlotBiomass.std, PlotRich.resid.NoShade.std, PlotShade.std,
+ PlotProd.resid.NoRich.std, PlotRich.resid.std)
+# write data behind Fig1_Panel_II_DEF
+#write.csv(fig1.DEF.sorted.standardized.dat, "Fig1_Panel_II_DEF.csv") # Just showing code here. Data file is provided with figure.
+
+############ END OF CODE FOR PLOT-LEVEL COMPONENT OF FIGURE 2 ###############
+detach(plot.sem.dat)
+
+
+########################################################################################################
+########### ILLUSTRATION OF HOW COMPOSITE SCORES FOR FERTILITY AND SUITABILITY WERE CREATED ############
+########################################################################################################
+# make sure all plot-level objects are removed before proceeding
+
+############ DETERMINATION OF COMPOSITES FOR SITE-LEVEL RELATIONS #############
+############### SITE-LEVEL LAVAAN MODELING WITHOUT COMPOSITES #######################
+library(lavaan)
+
+attach(site.sem.dat)
+
+# lavaan modeling
+sitemod1 <- 'SiteRich ~ SiteBiomass +Heterogeneity +Disturb.anthro +Sand +Silt +PrecipWarmQuarter
+              SiteBiomass ~ SiteProd +Disturb.herbiv  
+              SiteProd ~ LogP +PH +Silt +TempWetQuarter +Precip.cube +SiteRich
+              SiteProd ~~ SiteBiomass 
+             '
+sitemod1.fit <- sem(sitemod1, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE)  
+summary(sitemod1.fit) 
+
+#extract more digits for parameter estimates if needed by running the following 2 lines
+fileit.1 <-cbind(coef(sitemod1.fit),parameterestimates(sitemod1.fit)$est[])
+print(fileit.1)
+
+# formulae to calculate composites for site-level model (these are already in the input data file)
+SoilSuitability  = -0.708*Sand -1.116*Silt                      #compositing edaphic effects on SiteRich
+SoilFertility    = +0.144*LogP -0.123*PH +0.458*Silt            #compositing edaphic effects on SiteProd
+ClimateOnProd    = +0.098*TempWetQuarter -0.004*Precip.cube #compositing climate effects on SiteProd
+
+detach(site.sem.dat)
+
+
+############# PLOT-LEVEL LAVAAN MODELING WITHOUT COMPOSITES ###################
+library(lavaan)
+library(lavaan.survey)
+
+attach(plot.sem.dat)
+
+# Full model representing all theoretical constructs
+plotmod   <-  'PlotRich ~ SiteRich +PlotShade +PlotN +PlotN.sqr +PlotN.ln 
+               PlotShade   ~ PlotBiomass +PlotN +PlotN.sqr +PlotN.ln 
+               PlotBiomass ~ SiteBiomass +PlotProd  
+               PlotProd ~  SiteProd +PlotRich +PlotN +PlotC.ln +PlotP.ln 
+               PlotProd ~~ PlotBiomass #controlling for error correlation
+               '
+plotmod.fit <- sem(plotmod, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.designp <- svydesign(ids=~PlotSiteCode, nest=TRUE, data=plot.sem.dat)
+survey.fitp <- lavaan.survey(lavaan.fit=plotmod.fit, survey.design=survey.designp)
+survey.fitp  # gives chi-square
+summary(survey.fitp)
+mi <- modindices(survey.fitp)
+print(mi[mi$op == "~",])
+print(mi[mi$op == "~~",])
+
+
+# Alternative model omitting ns contribution from soil fertility variables to PlotProd
+plotmod.alt <-  'PlotRich ~ SiteRich +PlotShade +PlotN +PlotN.sqr +PlotN.ln 
+               PlotShade   ~ PlotBiomass +PlotN +PlotN.sqr +PlotN.ln 
+               PlotBiomass ~ SiteBiomass +PlotProd  
+               PlotProd ~  SiteProd +PlotRich                                    #+PlotN +PlotC.ln +PlotP.ln 
+               PlotProd ~~ PlotBiomass #controlling for error correlation
+               '
+plotmod.alt.fit <- sem(plotmod.alt, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.designp <- svydesign(ids=~PlotSiteCode, nest=TRUE, data=plot.sem.dat)
+survey.fitp.alt <- lavaan.survey(lavaan.fit=plotmod.alt.fit, survey.design=survey.designp)
+survey.fitp.alt  # gives chi-square
+summary(survey.fitp.alt)
+
+# Note: Alternative model omitting ns contribution from soil fertility variables to PlotProd has parsimony, 
+# but not as tight fit. However, fit improves after composites are created. This is model chosen for building the composited model
+
+# formulae to calculate composites for plot-level model "plotmod2a". Note these variables already in source dataset
+PlotSoilSuit   = -24.764*PlotN +4.725*PlotN.sqr +29.76*PlotN.ln 
+SoilWithShade  = -12.710*PlotN +2.802*PlotN.sqr +14.430*PlotN.ln 
+
+#################### END OF COMPOSITES DEMONSTRATION ################################
+detach(plot.sem.dat)
+
+############ TESTING THE DIMENSIONALITY REQUIRED FOR SITE-LEVEL MODEL ##########
+attach(site.sem.dat)
+library(lavaan)
+
+### Full Model - sitemod1comp
+sitemod <- 'SiteRich ~ SiteBiomass +Heterogeneity  +Disturb.anthro +SiteSoilSuit +ClimateOnRich
+            SiteBiomass ~ SiteProd +Disturb.herbiv 
+            SiteProd ~  SiteRich +SiteSoilFert +ClimateOnProd
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod.fit <- sem(sitemod, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod.fit, rsq=T)
+
+### Dropping Heterogeneity - sitemod2
+sitemod2 <- 'SiteRich ~ SiteBiomass +Disturb.anthro +SiteSoilSuit +ClimateOnRich
+            SiteBiomass ~ SiteProd +Disturb.herbiv 
+            SiteProd ~  SiteRich +SiteSoilFert +ClimateOnProd
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod2.fit <- sem(sitemod2, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod2.fit, rsq=T)
+
+### Dropping Disturbance variables - sitemod3
+sitemod3 <- 'SiteRich ~ SiteBiomass +Heterogeneity +SiteSoilSuit +ClimateOnRich
+            SiteBiomass ~ SiteProd  
+            SiteProd ~  SiteRich +SiteSoilFert +ClimateOnProd
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod3.fit <- sem(sitemod3, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod3.fit, rsq=T)
+
+### Dropping Climate Variables - sitemod4
+sitemod4 <- 'SiteRich ~ SiteBiomass +Heterogeneity  +Disturb.anthro +SiteSoilSuit 
+            SiteBiomass ~ SiteProd +Disturb.herbiv 
+            SiteProd ~  SiteRich +SiteSoilFert 
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod4.fit <- sem(sitemod4, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod4.fit, rsq=T)
+
+### Dropping Soil Factors - sitemod5
+sitemod5 <- 'SiteRich ~ SiteBiomass +Heterogeneity  +Disturb.anthro +ClimateOnRich
+            SiteBiomass ~ SiteProd +Disturb.herbiv 
+            SiteProd ~  SiteRich +ClimateOnProd
+            SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod5.fit <- sem(sitemod5, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod5.fit, rsq=T)
+
+### Dropping Biomass - sitemod6
+sitemod6 <- 'SiteRich ~ Heterogeneity  +Disturb.anthro +SiteSoilSuit +ClimateOnRich +SiteProd
+            SiteProd ~  SiteRich +SiteSoilFert +ClimateOnProd
+            '
+sitemod6.fit <- sem(sitemod6, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod6.fit, rsq=T, modindices=TRUE)
+
+### Omitting path from richness to productivity - sitemod7
+sitemod7 <- 'SiteRich ~ SiteBiomass +Heterogeneity  +Disturb.anthro +SiteSoilSuit +ClimateOnRich
+             SiteBiomass ~ SiteProd +Disturb.herbiv 
+             SiteProd ~  0*SiteRich +SiteSoilFert +ClimateOnProd
+             SiteProd ~~ SiteBiomass #controlling for error correlation
+            '
+sitemod7.fit <- sem(sitemod7, data=site.sem.dat, fixed.x=FALSE, meanstructure = TRUE) 
+summary(sitemod7.fit, rsq=T) # model fails to fit
+# look for cause of misspecification - 
+mi <- modindices(sitemod7.fit)
+print(mi[mi$op == "~",])  # results indicate path from richness to productivity needs to be reinstated
+
+############ END OF CODE FOR TESTING THE DIMENSIONALITY OF SITE-LEVEL MODEL ####
+detach(site.sem.dat)
+
+############ TESTING THE DIMENSIONALITY REQUIRED FOR PLOT-LEVEL MODEL ##########
+
+attach(plot.sem.dat)
+library(lavaan)
+library(lavaan.survey)
+
+# Full Model - plotmod1                           
+plotmod1 <-  'PlotRich ~ SiteRich +PlotShade +PlotSoilSuit 
+             PlotShade   ~ PlotBiomass +SoilWithShade 
+             PlotBiomass ~ SiteBiomass +PlotProd  
+             PlotProd ~  SiteProd +PlotRich                                     
+             PlotProd ~~ PlotBiomass #controlling for error correlation
+             '
+plotmod1.fit <- sem(plotmod1, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.designplot <- svydesign(ids=~PlotSiteCode, nest=TRUE, data=plot.sem.dat)
+survey.fit.plot1 <- lavaan.survey(lavaan.fit=plotmod1.fit, survey.design=survey.designplot)
+survey.fit.plot1  # gives chi-square
+summary(survey.fit.plot1, rsq=T)
+
+### Dropping Soil Factors - plotmod2
+plotmod2 <-  'PlotRich ~ SiteRich +PlotShade  
+             PlotShade   ~ PlotBiomass  
+             PlotBiomass ~ SiteBiomass +PlotProd  
+             PlotProd ~  SiteProd +PlotRich                                     
+             PlotProd ~~ PlotBiomass #controlling for error correlation
+             '
+plotmod2.fit <- sem(plotmod2, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.fit.plot2 <- lavaan.survey(lavaan.fit=plotmod2.fit, survey.design=survey.designplot)
+survey.fit.plot2  # gives chi-square
+summary(survey.fit.plot2, rsq=T)
+
+### Dropping Shading - plotmod3
+plotmod3 <-  'PlotRich ~ SiteRich +PlotBiomass +PlotSoilSuit 
+             PlotBiomass ~ SiteBiomass +PlotProd  
+             PlotProd ~  SiteProd +PlotRich                                     
+             PlotProd ~~ PlotBiomass #controlling for error correlation
+             '
+plotmod3.fit <- sem(plotmod3, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.fit.plot3 <- lavaan.survey(lavaan.fit=plotmod3.fit, survey.design=survey.designplot)
+survey.fit.plot3  # gives chi-square
+summary(survey.fit.plot3, rsq=T)
+
+### Dropping Biomass - plotmod4
+plotmod4 <-  'PlotRich ~ SiteRich +PlotShade +PlotSoilSuit 
+             PlotShade   ~ PlotProd +SoilWithShade 
+             PlotProd ~  SiteProd +PlotRich                                     
+             '
+plotmod4.fit <- sem(plotmod4, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.fit.plot4 <- lavaan.survey(lavaan.fit=plotmod4.fit, survey.design=survey.designplot)
+survey.fit.plot4  # gives chi-square
+summary(survey.fit.plot4, rsq=T)
+
+### Dropping Productivity - plotmod5
+plotmod5 <-  'PlotRich ~ SiteRich +PlotShade +PlotSoilSuit 
+             PlotShade   ~ PlotBiomass +SoilWithShade 
+             PlotBiomass ~ SiteBiomass   
+             '
+plotmod5.fit <- sem(plotmod5, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.fit.plot5 <- lavaan.survey(lavaan.fit=plotmod5.fit, survey.design=survey.designplot)
+survey.fit.plot5  # gives chi-square
+summary(survey.fit.plot5, rsq=T)
+
+# Dropping path from richness to productivity - plotmod6                           
+plotmod6 <-  'PlotRich ~ SiteRich +PlotShade +PlotSoilSuit 
+              PlotShade   ~ PlotBiomass +SoilWithShade 
+              PlotBiomass ~ SiteBiomass +PlotProd  
+              PlotProd ~  SiteProd +0*PlotRich                                     
+              PlotProd ~~ PlotBiomass #controlling for error correlation
+              '
+plotmod6.fit <- sem(plotmod6, data=plot.sem.dat, meanstructure=TRUE)
+# adjusting for nested design
+survey.fit.plot6 <- lavaan.survey(lavaan.fit=plotmod6.fit, survey.design=survey.designplot)
+survey.fit.plot6  # gives chi-square
+summary(survey.fit.plot6, rsq=T)
+
+## Assessing model differences in this situation:
+#Regarding chi-square difference testing for models that use WLS procedures (i.e., Robust estimation), 
+#go to http://www.statmodel.com/chidiff.shtml for a discussion.
+#Use the formula: cd = (d0 * c0 - d1*c1)/(d0 - d1), where d0 is df for less restricted model and d1 is df for more restricted model - d0-d1 usually = 1,
+#and where c0 and c2 are the printed scaling correction factors for the models being compared.
+#Then, Compute the Satorra-Bentler scaled chi-square difference test TRd as follows: 
+#TRd = (T0*c0 - T1*c1)/cd, where T0 and T1 are the chi-squares for the models.
+
+#Test at plot-level:
+#Model			      df  robust test stat		S-B factor
+#full model: 		  16  21.907			        6.990
+#w/o rich to prod	17  23.702			        6.620
+
+#Here, 
+d0 = 17
+d1 = 11
+c0 = 6.620
+c1 = 6.990
+
+#so,
+cd = (17*6.620 - 16*6.990)/1; print(cd) # = 0.7
+
+#Then,
+T0 = 23.702
+T1 = 21.907
+#and
+#TRd = (T0*c0 - T1*c1)/cd
+TRd = (23.702*6.620 - 21.907*6.990)/0.7; print(TRd) # = 5.396157, which is greater than 3.84, thus a significant reduction in fit
+
+
+detach(plot.sem.dat)
+           
