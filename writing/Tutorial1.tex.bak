@@ -1,0 +1,10 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+
+Sensitivity ($S$) is being defined as per capita growth rate in biculture over that of monoculture.
+
+$$S = \frac{\mu_{alone}}{\mu_w}$$
+
+\end{document}
+
