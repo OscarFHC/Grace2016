@@ -92,5 +92,6 @@ bf_pshade <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psiteco
 bf_ptotmass <- brmsformula(ln_ptotmass ~ ln_pprod + (1|ID|psitecode))
 bf_pprod <- brmsformula(ln_pprod ~ ln_prich + (1|ID|psitecode))
 bform <- bf_prich + bf_pshade + bf_ptotmass + bf_pprod + set_rescor(FALSE)
-fit <- brm(bform, data = plot_dat, cores = 4, refresh = 0, chains = 4)
+brms_fit <- brm(bform, data = plot_dat, cores = 4, refresh = 0, chains = 4)
+summary(brms_fit, waic = TRUE)
 
