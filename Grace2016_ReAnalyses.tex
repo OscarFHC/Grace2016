@@ -1,0 +1,185 @@
+\documentclass[ignorenonframetext,]{beamer}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+\usetheme[]{AnnArbor}
+\usecolortheme{dolphin}
+\usefonttheme{structurebold}
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\newif\ifbibliography
+\hypersetup{
+            pdftitle={Re-analyze Grace et al. 2016},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
+\usepackage{caption}
+% These lines are needed to make table captions work with longtable:
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+
+\AtBeginPart{
+  \let\insertpartnumber\relax
+  \let\partname\relax
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \let\insertsectionnumber\relax
+    \let\sectionname\relax
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \let\insertsubsectionnumber\relax
+  \let\subsectionname\relax
+  \frame{\subsectionpage}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+
+\title{Re-analyze Grace \emph{et al.} 2016}
+\date{}
+
+\begin{document}
+\frame{\titlepage}
+
+\section{\texorpdfstring{Parameters estimates in Grace \emph{et al.}
+2016}{Parameters estimates in Grace et al. 2016}}\label{parameters-estimates-in-grace-et-al.-2016}
+
+\subsection{}\label{section}
+
+\begin{frame}
+
+\begin{longtable}[]{@{}lllrrrrrr@{}}
+\toprule
+lhs & op & rhs & est & se & z & pvalue & ci.lower &
+ci.upper\tabularnewline
+\midrule
+\endhead
+ln\_prich & \textasciitilde{} & ln\_site\_rich & 0.6501342 & 0.0168029 &
+38.6918644 & 0.0000000 & 0.6172012 & 0.6830672\tabularnewline
+ln\_prich & \textasciitilde{} & ln\_pshade & -0.8391925 & 0.0454589 &
+-18.4604577 & 0.0000000 & -0.9282903 & -0.7500946\tabularnewline
+ln\_prich & \textasciitilde{} & SoilSuitability & 0.9992478 & 0.0455410
+& 21.9417267 & 0.0000000 & 0.9099891 & 1.0885064\tabularnewline
+ln\_pshade & \textasciitilde{} & ln\_ptotmass & 0.1423365 & 0.0058515 &
+24.3247195 & 0.0000000 & 0.1308677 & 0.1538052\tabularnewline
+ln\_pshade & \textasciitilde{} & SoilWithShade & 0.9998799 & 0.0920428 &
+10.8632106 & 0.0000000 & 0.8194794 & 1.1802803\tabularnewline
+ln\_ptotmass & \textasciitilde{} & ln\_site\_totmass & 1.0179987 &
+0.0147475 & 69.0285930 & 0.0000000 & 0.9890941 &
+1.0469032\tabularnewline
+ln\_ptotmass & \textasciitilde{} & ln\_pprod & 0.0010090 & 0.0223822 &
+0.0450789 & 0.9640445 & -0.0428593 & 0.0448772\tabularnewline
+ln\_pprod & \textasciitilde{} & ln\_site\_prod & 1.0123889 & 0.0189260 &
+53.4918943 & 0.0000000 & 0.9752945 & 1.0494832\tabularnewline
+ln\_pprod & \textasciitilde{} & ln\_prich & 0.0246006 & 0.0119848 &
+2.0526597 & 0.0401056 & 0.0011109 & 0.0480903\tabularnewline
+ln\_ptotmass & \textasciitilde{}\textasciitilde{} & ln\_pprod &
+0.1366626 & 0.0072326 & 18.8954228 & 0.0000000 & 0.1224870 &
+0.1508382\tabularnewline
+ln\_prich & \textasciitilde{}\textasciitilde{} & ln\_prich & 0.0919686 &
+0.0038760 & 23.7276210 & 0.0000000 & 0.0843717 &
+0.0995654\tabularnewline
+ln\_pshade & \textasciitilde{}\textasciitilde{} & ln\_pshade & 0.0261328
+& 0.0011014 & 23.7276210 & 0.0000000 & 0.0239741 &
+0.0282914\tabularnewline
+ln\_ptotmass & \textasciitilde{}\textasciitilde{} & ln\_ptotmass &
+0.1478652 & 0.0087191 & 16.9588055 & 0.0000000 & 0.1307761 &
+0.1649543\tabularnewline
+ln\_pprod & \textasciitilde{}\textasciitilde{} & ln\_pprod & 0.1674709 &
+0.0070689 & 23.6911544 & 0.0000000 & 0.1536161 &
+0.1813258\tabularnewline
+ln\_site\_rich & \textasciitilde{}\textasciitilde{} & ln\_site\_rich &
+0.2929885 & 0.0000000 & NA & NA & 0.2929885 & 0.2929885\tabularnewline
+ln\_site\_rich & \textasciitilde{}\textasciitilde{} & SoilSuitability &
+-0.0034606 & 0.0000000 & NA & NA & -0.0034606 &
+-0.0034606\tabularnewline
+ln\_site\_rich & \textasciitilde{}\textasciitilde{} & SoilWithShade &
+-0.0031963 & 0.0000000 & NA & NA & -0.0031963 &
+-0.0031963\tabularnewline
+ln\_site\_rich & \textasciitilde{}\textasciitilde{} & ln\_site\_totmass
+& -0.0672730 & 0.0000000 & NA & NA & -0.0672730 &
+-0.0672730\tabularnewline
+ln\_site\_rich & \textasciitilde{}\textasciitilde{} & ln\_site\_prod &
+-0.0346146 & 0.0000000 & NA & NA & -0.0346146 &
+-0.0346146\tabularnewline
+SoilSuitability & \textasciitilde{}\textasciitilde{} & SoilSuitability &
+0.0450090 & 0.0000000 & NA & NA & 0.0450090 & 0.0450090\tabularnewline
+SoilSuitability & \textasciitilde{}\textasciitilde{} & SoilWithShade &
+0.0089608 & 0.0000000 & NA & NA & 0.0089608 & 0.0089608\tabularnewline
+SoilSuitability & \textasciitilde{}\textasciitilde{} & ln\_site\_totmass
+& 0.0487297 & 0.0000000 & NA & NA & 0.0487297 & 0.0487297\tabularnewline
+SoilSuitability & \textasciitilde{}\textasciitilde{} & ln\_site\_prod &
+0.0709820 & 0.0000000 & NA & NA & 0.0709820 & 0.0709820\tabularnewline
+SoilWithShade & \textasciitilde{}\textasciitilde{} & SoilWithShade &
+0.0028457 & 0.0000000 & NA & NA & 0.0028457 & 0.0028457\tabularnewline
+SoilWithShade & \textasciitilde{}\textasciitilde{} & ln\_site\_totmass &
+0.0084795 & 0.0000000 & NA & NA & 0.0084795 & 0.0084795\tabularnewline
+SoilWithShade & \textasciitilde{}\textasciitilde{} & ln\_site\_prod &
+0.0141935 & 0.0000000 & NA & NA & 0.0141935 & 0.0141935\tabularnewline
+ln\_site\_totmass & \textasciitilde{}\textasciitilde{} &
+ln\_site\_totmass & 0.5356742 & 0.0000000 & NA & NA & 0.5356742 &
+0.5356742\tabularnewline
+ln\_site\_totmass & \textasciitilde{}\textasciitilde{} & ln\_site\_prod
+& 0.3970508 & 0.0000000 & NA & NA & 0.3970508 & 0.3970508\tabularnewline
+ln\_site\_prod & \textasciitilde{}\textasciitilde{} & ln\_site\_prod &
+0.4156672 & 0.0000000 & NA & NA & 0.4156672 & 0.4156672\tabularnewline
+ln\_prich & \textasciitilde{}1 & & -0.0149711 & 0.0750390 & -0.1995106 &
+0.8418633 & -0.1620448 & 0.1321027\tabularnewline
+ln\_pshade & \textasciitilde{}1 & & -0.3344445 & 0.0340840 & -9.8123511
+& 0.0000000 & -0.4012480 & -0.2676410\tabularnewline
+ln\_ptotmass & \textasciitilde{}1 & & -0.1767590 & 0.0950626 &
+-1.8593960 & 0.0629710 & -0.3630783 & 0.0095603\tabularnewline
+ln\_pprod & \textasciitilde{}1 & & -0.2079323 & 0.1089170 & -1.9090896 &
+0.0562505 & -0.4214058 & 0.0055411\tabularnewline
+ln\_site\_rich & \textasciitilde{}1 & & 3.8428937 & 0.0000000 & NA & NA
+& 3.8428937 & 3.8428937\tabularnewline
+SoilSuitability & \textasciitilde{}1 & & 0.5892024 & 0.0000000 & NA & NA
+& 0.5892024 & 0.5892024\tabularnewline
+SoilWithShade & \textasciitilde{}1 & & 0.1604521 & 0.0000000 & NA & NA &
+0.1604521 & 0.1604521\tabularnewline
+ln\_site\_totmass & \textasciitilde{}1 & & 5.7627413 & 0.0000000 & NA &
+NA & 5.7627413 & 5.7627413\tabularnewline
+ln\_site\_prod & \textasciitilde{}1 & & 5.4144044 & 0.0000000 & NA & NA
+& 5.4144044 & 5.4144044\tabularnewline
+\bottomrule
+\end{longtable}
+
+\end{frame}
+
+\end{document}

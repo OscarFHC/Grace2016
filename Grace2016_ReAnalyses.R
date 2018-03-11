@@ -21,7 +21,7 @@ plotmod_1 <- 'ln_prich ~ ln_site_rich + ln_pshade + SoilSuitability
               ln_pprod ~~ ln_ptotmass #controlling for error correlation
              '
 
-plotmod_fit_1 <- sem(plotmod_1, data = plot_dat, meanstructure = TRUE)
+plotmod_fit_1 <- sem(plotmod_1, data = plot_dat, fit.measure = TRUE)
 summary(plotmod_fit_1)
 # adjusting for nested design
 survey_designplot <- svydesign(ids = ~psitecode, nest = TRUE, data = plot_dat)
@@ -34,16 +34,42 @@ standardizedSolution(survey_fit_plot)
 
 ### Using piecewiseSEM (with random effects) to estimate effects of each variable ################
 
-mod_list_1 <- 
+mod_Site <- 
   list(
-    lme(ln_prich ~ ln_pshade + SoilSuitability, 
+    lme(ln_prich ~ ln_pshade + SoilSuitability + ln_site_rich, 
         random = ~ 1 | psitecode, 
         data = plot_dat, 
         control =  lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
     lme(ln_pshade ~ ln_ptotmass + SoilWithShade, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-    lme(ln_ptotmass ~ ln_pprod, 
+    lme(ln_ptotmass ~ ln_pprod + ln_site_totmass, 
+        random = ~ 1 | psitecode, 
+        data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
+    lme(ln_pprod ~ ln_prich + ln_site_prod, 
+        random = ~ 1 | psitecode, 
+        data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000)))
+  )  
+
+sem.coefs(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+sem.fit(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass",
+        model.control = list(lmeControl(maxIter = 1000, msMaxIter = 1000, opt = "optim")),
+        conditional = TRUE)
+sem.model.fits(modelList = mod_Site)
+sem.plot(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+sem.lavaan(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+
+
+mod_NoSite <- 
+  list(
+    lme(ln_prich ~ ln_pshade + SoilSuitability, 
+        random = ~ 1 | psitecode, 
+        data = plot_dat, 
+        control =  lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
+    lme(ln_pshade ~ SoilWithShade, 
+        random = ~ 1 | psitecode, 
+        data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
+    lme(ln_ptotmass ~ ln_site_totmass + ln_pprod, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
     lme(ln_pprod ~ ln_prich, 
@@ -51,47 +77,29 @@ mod_list_1 <-
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000)))
   ) 
 
-sem.coefs(modelList = mod_list_1, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
-sem.fit(modelList = mod_list_1, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass",
+sem.coefs(modelList = mod_NoSite, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+sem.fit(modelList = mod_NoSite, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass",
         model.control = list(lmeControl(maxIter = 1000, msMaxIter = 1000, opt = "optim")),
         conditional = TRUE)
-sem.model.fits(modelList = mod_list_1)
-sem.plot(modelList = mod_list_1, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
-sem.lavaan(modelList = mod_list_1, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+sem.model.fits(modelList = mod_NoSite)
+sem.plot(modelList = mod_NoSite, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+sem.lavaan(modelList = mod_NoSite, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
 
 
-mod_list <- 
-list(
-  lme(ln_prich ~ ln_pshade + SoilSuitability, 
-      random = ~ ln_pshade | psitecode, 
-      data = plot_dat, 
-      control =  lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-  lme(ln_pshade ~ ln_ptotmass + SoilWithShade, 
-      random = ~ 1 + ln_ptotmass + SoilWithShade | psitecode, 
-      data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-  lme(ln_ptotmass ~ ln_pprod, 
-      random = ~ 1 + ln_pprod | psitecode, 
-      data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-  lme(ln_pprod ~ ln_prich, 
-      random = ~ 1 + ln_prich | psitecode, 
-      data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000)))
-) 
-
-sem.coefs(modelList = mod_list, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
-sem.fit(modelList = mod_list, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass",
-        model.control = list(lmeControl(maxIter = 1000, msMaxIter = 1000, opt = "optim")),
-        conditional = TRUE)
-sem.model.fits(modelList = mod_list)
-sem.plot(modelList = mod_list, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
-sem.lavaan(modelList = mod_list, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")
+bf_prich_Site <- brmsformula(ln_prich ~ ln_pshade + SoilSuitability + ln_site_rich + (1|ID|psitecode))
+bf_pshade_Site <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psitecode))
+bf_ptotmass_Site <- brmsformula(ln_ptotmass ~ ln_pprod + ln_site_totmass + (1|ID|psitecode))
+bf_pprod_Site <- brmsformula(ln_pprod ~ ln_prich + ln_site_prod + (1|ID|psitecode))
+bform_Site <- bf_prich_Site + bf_pshade_Site + bf_ptotmass_Site + bf_pprod_Site + set_rescor(FALSE)
+brms_fit_Site <- brm(bform_Site, data = plot_dat, cores = 4, refresh = 0, chains = 4)
+summary(brms_fit_Site, waic = TRUE)
 
 
-
-bf_prich <- brmsformula(ln_prich ~ ln_pshade + SoilSuitability + (1|ID|psitecode))
-bf_pshade <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psitecode))
-bf_ptotmass <- brmsformula(ln_ptotmass ~ ln_pprod + (1|ID|psitecode))
-bf_pprod <- brmsformula(ln_pprod ~ ln_prich + (1|ID|psitecode))
-bform <- bf_prich + bf_pshade + bf_ptotmass + bf_pprod + set_rescor(FALSE)
-brms_fit <- brm(bform, data = plot_dat, cores = 4, refresh = 0, chains = 4)
-summary(brms_fit, waic = TRUE)
+bf_prich_NoSite <- brmsformula(ln_prich ~ ln_pshade + SoilSuitability + (1|ID|psitecode))
+bf_pshade_NoSite <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psitecode))
+bf_ptotmass_NoSite <- brmsformula(ln_ptotmass ~  ln_pprod + (1|ID|psitecode))
+bf_pprod_NoSite <- brmsformula(ln_pprod ~ ln_prich + (1|ID|psitecode))
+bform_NoSite <- bf_prich_NoSite + bf_pshade_NoSite + bf_ptotmass_NoSite + bf_pprod_NoSite + set_rescor(FALSE)
+brms_fit_NoSite <- brm(bform_NoSite, data = plot_dat, cores = 4, refresh = 0, chains = 4)
+summary(brms_fit_NoSite, waic = TRUE)
 
