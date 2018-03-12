@@ -7,11 +7,18 @@ output:
     fonttheme: "structurebold"
     df_print: kable
     keep_tex: true
-    slide_level: 3
+    slide_level: 1
 ---
 
+```{r, echo = FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
 ```{r, read in data / perp libraries, echo = FALSE, message = FALSE}
+library(knitr)
 library(tidyverse)
+library(kableExtra)
 library(nlme)
 library(lavaan)
 library(lavaan.survey)
@@ -27,9 +34,6 @@ colnames(plot_dat) <-
     "ln_pc", "ln_pp")
 ```
 
-# Parameters estimates in Grace *et al.* 2016
-
-***
 ```{r, plain parameter estimates, echo = FALSE}
 plotmod_1 <- 'ln_prich ~ ln_site_rich + ln_pshade + SoilSuitability 
               ln_pshade   ~ ln_ptotmass + SoilWithShade 
@@ -40,15 +44,17 @@ plotmod_1 <- 'ln_prich ~ ln_site_rich + ln_pshade + SoilSuitability
 
 plotmod_fit_1 <- sem(plotmod_1, data = plot_dat, meanstructure = TRUE)
 param0 <- parameterEstimates(plotmod_fit_1)[1:9, c("lhs", "rhs", "est", "pvalue")]
+AIC(plotmod_fit_1)
 ```
 
-```{r,parameter estimates from Grace, echo = FALSE, message = FALSE}
+```{r,parameter estimates from Grace, echo = FALSE, messages = FALSE, warning = FALSE}
 survey_designplot <- svydesign(ids = ~psitecode, nest = TRUE, data = plot_dat)
 survey_fit.plot <- lavaan.survey(lavaan.fit = plotmod_fit_1, survey.design = survey_designplot)
 param_Grace <- parameterEstimates(survey_fit.plot)[1:9, c("lhs", "rhs", "est", "pvalue")]
+AIC(survey_fit.plot)
 ```
 
-```{r, param estimates with piecewiseSEM with Site, echo = FALSE, message = FALSE}
+```{r, param estimates with piecewiseSEM with Site, echo = FALSE}
 mod_Site <- 
   list(
     lme(ln_prich ~ ln_pshade + SoilSuitability + ln_site_rich, 
@@ -58,29 +64,30 @@ mod_Site <-
     lme(ln_pshade ~ ln_ptotmass + SoilWithShade, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-    lme(ln_ptotmass ~ ln_site_totmass + ln_pprod, 
+    lme(ln_ptotmass ~ ln_pprod + ln_site_totmass, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-    lme(ln_pprod ~ ln_site_prod + ln_prich, 
+    lme(ln_pprod ~ ln_prich + ln_site_prod, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000)))
   ) 
 
 param_pSEM_Wsite <- sem.coefs(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass")[1:9,] %>%
   subset(select = c(response, predictor, estimate, p.value))
+AIC(sem.coefs(modelList = mod_Site, data = plot_dat, corr.errors = "ln_pprod ~~ ln_ptotmass"))
 ```
 
-```{r, param estimates with piecewiseSEM W/O Site, echo = FALSE, message = FALSE}
+```{r, param estimates with piecewiseSEM W/O Site, echo = FALSE}
 mod_NoSite <- 
   list(
     lme(ln_prich ~ ln_pshade + SoilSuitability, 
         random = ~ 1 | psitecode, 
         data = plot_dat, 
         control =  lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-    lme(ln_pshade ~ SoilWithShade, 
+    lme(ln_pshade ~ ln_ptotmass + SoilWithShade, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
-    lme(ln_ptotmass ~ ln_site_totmass + ln_pprod, 
+    lme(ln_ptotmass ~ ln_pprod, 
         random = ~ 1 | psitecode, 
         data = plot_dat, control = lmeControl(lmeControl(maxIter = 1000, msMaxIter = 1000))),
     lme(ln_pprod ~ ln_prich, 
@@ -92,7 +99,7 @@ param_pSEM_NoSite <- sem.coefs(modelList = mod_NoSite, data = plot_dat, corr.err
   subset(select = c(response, predictor, estimate, p.value))
 ```
 
-```{r, param estimate with brms with Site, echo = FALSE, message = FALSE}
+```{r, param estimate with brms with Site, echo = FALSE, eval = FALSE}
 bf_prich_Site <- brmsformula(ln_prich ~ ln_pshade + SoilSuitability + ln_site_rich + (1|ID|psitecode))
 bf_pshade_Site <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psitecode))
 bf_ptotmass_Site <- brmsformula(ln_ptotmass ~ ln_pprod + ln_site_totmass + (1|ID|psitecode))
@@ -102,9 +109,7 @@ brms_fit_Site <- brm(bform_Site, data = plot_dat, cores = 4, refresh = 0, chains
 summary(brms_fit_Site, waic = TRUE)
 ```
 
-
-
-```{r, param estimate with brms with No Site, echo = FALSE, message = FALSE}
+```{r, param estimate with brms with No Site, echo = FALSE, eval = FALSE}
 bf_prich_NoSite <- brmsformula(ln_prich ~ ln_pshade + SoilSuitability + (1|ID|psitecode))
 bf_pshade_NoSite <- brmsformula(ln_pshade ~ ln_ptotmass + SoilWithShade + (1|ID|psitecode))
 bf_ptotmass_NoSite <- brmsformula(ln_ptotmass ~  ln_pprod + (1|ID|psitecode))
@@ -112,8 +117,65 @@ bf_pprod_NoSite <- brmsformula(ln_pprod ~ ln_prich + (1|ID|psitecode))
 bform_NoSite <- bf_prich_NoSite + bf_pshade_NoSite + bf_ptotmass_NoSite + bf_pprod_NoSite + set_rescor(FALSE)
 brms_fit_NoSite <- brm(bform_NoSite, data = plot_dat, cores = 4, refresh = 0, chains = 4)
 summary(brms_fit_NoSite, waic = TRUE)
-
 ```
+
+# Parameters estimates in Grace *et al.* 2016
+
+```{r, echo = FALSE, warning = FALSE}
+params_est <- 
+  left_join(param0[,1:3], param_Grace[,1:3], by = c("lhs", "rhs")) %>%
+  left_join(param_pSEM_Wsite[,1:3], by = c("lhs" = "response", "rhs" = "predictor")) %>%
+  left_join(param_pSEM_NoSite[,1:3], by = c("lhs" = "response", "rhs" = "predictor"))
+params_est[,-c(1:2)] <- round(params_est[,-c(1:2)], 3)
+
+simple <- bquote("Simple SEM")
+Grace <- paste(text_spec("SEM from Grace", "latex"),
+               text_spec("et al.", "latex", italic = TRUE),
+               text_spec("2016"), "")
+
+pSEM_Site <- bquote("SEM with random effect/n(including site)")
+pSEM_NoSite <- bquote("SEM with random effect/n(not including site)")
+colnames(params_est) <- c("Response", "Predictor", simple, Grace, pSEM_Site, pSEM_NoSite)
+
+params_est[,"Response"] <- c(rep("Plot sp. richness", 3), rep("Shade cover", 2), 
+                             rep("Plot biomass", 2), rep("Plot production", 2))
+params_est[,"Predictor"] <- c("Site sp. richness", "Plot shade cover", "Soil suitability", "Plot biomass", 
+                              "Covariates of soil", "Site biomass", "Plot production", "Site production", "Plot sp. richness")
+
+kable(params_est, format = "latex", booktabs = T) %>%
+  kable_styling(font_size = 8) %>%
+  add_header_above(header = c(" " = 2, "Coefficient estimates from different models" = 4))
+```
+
+***
+Table Header  | SEM with random effect
+------------- | -------------
+Table Cell    | Cell 2
+Cell 3        | Cell 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

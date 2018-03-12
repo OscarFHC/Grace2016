@@ -34,12 +34,6 @@
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
-\usepackage{longtable,booktabs}
-\usepackage{caption}
-% These lines are needed to make table captions work with longtable:
-\makeatletter
-\def\fnum@table{\tablename~\thetable}
-\makeatother
 
 % Prevent slide breaks in the middle of a paragraph:
 \widowpenalties 1 10000
@@ -77,44 +71,15 @@
 \begin{document}
 \frame{\titlepage}
 
-\begin{frame}{Parameters estimates in Grace \emph{et al.} 2016}
+\section{\texorpdfstring{Parameters estimates in Grace \emph{et al.}
+2016}{Parameters estimates in Grace et al. 2016}}\label{parameters-estimates-in-grace-et-al.-2016}
 
-\begin{table}[H]
-\centering\begingroup\fontsize{8}{10}\selectfont
+\begin{frame}[fragile]
 
-\begin{tabular}{llrrrr}
-\toprule
-\multicolumn{2}{c}{ } & \multicolumn{4}{c}{Coefficient estimates from different models} \\
-\cmidrule(l{2pt}r{2pt}){3-6}
-Response & Predictor & Simple SEM & SEM from Grace \textbackslash{}em\{et al.\} <span style="" >2016</span>  & SEM with random effect/n(including site) & SEM with random effect/n(not including site)\\
-\midrule
-Plot sp. richness & Site sp. richness & 0.650 & 0.650 & 0.647 & NA\\
-Plot sp. richness & Plot shade cover & -0.839 & -0.839 & -0.210 & -0.188\\
-Plot sp. richness & Soil suitability & 0.999 & 0.999 & 0.007 & -0.086\\
-Shade cover & Plot biomass & 0.142 & 0.142 & 0.074 & 0.074\\
-Shade cover & Covariates of soil & 1.000 & 1.000 & 0.182 & 0.182\\
-\addlinespace
-Plot biomass & Site biomass & 1.018 & 1.018 & 0.395 & NA\\
-Plot biomass & Plot production & 0.001 & 0.001 & 0.807 & 0.817\\
-Plot production & Site production & 1.012 & 1.012 & 1.011 & NA\\
-Plot production & Plot sp. richness & 0.025 & 0.025 & 0.026 & -0.011\\
-\bottomrule
-\end{tabular}\endgroup{}
-\end{table}
-
-\end{frame}
-
-\begin{frame}
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule
-Table Header & SEM with random effect\tabularnewline
-\midrule
-\endhead
-Table Cell & Cell 2\tabularnewline
-Cell 3 & Cell 4\tabularnewline
-\bottomrule
-\end{longtable}
+\begin{verbatim}
+## Warning in svydesign.default(ids = ~psitecode, nest = TRUE, data =
+## plot_dat): No weights or probabilities supplied, assuming equal probability
+\end{verbatim}
 
 \end{frame}
 
