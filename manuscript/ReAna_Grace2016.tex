@@ -1,0 +1,104 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Reanalyze Grace \textit{et al.} 2016}
+\author{Feng-Hsun Chang}
+\date{March 11 2018}
+
+\usepackage{textcomp}
+\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{makecell}
+\usepackage[parfill]{parskip}
+\usepackage[]{geometry}
+\usepackage{changepage}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+}
+ 
+\urlstyle{same}
+
+\renewcommand\theadalign{bc}
+\renewcommand\theadfont{\bfseries}
+\renewcommand\theadgape{\Gape[4pt]}
+\renewcommand\cellgape{\Gape[4pt]}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Grace \textit{et al.} 2016 \cite{Grace2016} argue that the relationship between biodiversity and ecosystem functioning could be overlooked when investigated with bi-variate plot. Many important correlations and interactions among different variables can only be revealed with the aid of structural equation modeling (SEM).  
+
+However, there is hierarchical structure in the data as \textit(plots) data are nested in different \textit(sites) in different geographic regions. In Grace \textit{et al.} 2016, this hierarchical structure was being treated as the site level analyses and the author included effects from site level to plot level (i.e. effects from site richness to plot richness, site biomass to plot biomass and site productivity to plot productivity). Since the author did not specifically consider such hierarchical structure, I compared results from this paper to another three models, including a plain SEM, two hierarchical SEM including and excluding site variables. In the plain SEM no hierarchy and any nested experimental design were considered. In the two hierarchical SEM, all effects are allowed to vary among different sites (i.e. having site as the random effect). 
+
+The following table show the estimate of each effect in 4 different models. The R code for these four models can be found \href{https://github.com/OscarFHC/Grace2016/blob/master/Grace2016_ReAnalyses.R}{here}. 
+
+
+\begin{adjustwidth}{-1cm}{}
+\begin{tabular}{ c c c c c c }
+    \multicolumn{6}{l}{The table 1 shows the estimate of each effect of the plot level in Grace \textit{et al.} 2016} \\
+    \hline
+    \thead{Response} & \thead{Predictor} & \thead{ Grace \\ \textit{et al.} 2016} & \thead{plain SEM} & \thead{hierarchical SEM \\ (including Site)} & \thead{hierarchical SEM \\ (not including Site)} \\
+    \hline
+    
+    \makecell{Plot sp.\\ richness} & \makecell{Site sp. \\ richness} & \makecell{0.650* \\ (0.536, 0.764)}
+    & \makecell{0.650* \\ (0.617, 0.683)} & \makecell{0.647* \\ (0.486, 0.807)} 
+    & --- \\    
+    
+    \makecell{Plot sp.\\ richness} & \makecell{Plot \\ shade} & \makecell{-0.839* \\ (-1.146, -0.532)}
+    & \makecell{-0.839* \\ (-0.928, -0.750)} & \makecell{-0.210* \\ (-0.352, -0.068)} 
+    & \makecell{-0.188* \\ (-0.333, -0.042)} \\
+    
+    \makecell{Plot sp.\\ richness} & \makecell{Soil \\ suitability} & \makecell{0.999* \\ (0.642, 1.357)}
+    & \makecell{0.990* \\ (0.910, 1.089)} & \makecell{0.007 \\ (-0.182, 0.197)} 
+    & \makecell{-0.086 \\ (-0.285, 0.114)} \\
+    
+    \makecell{Plot \\ shade} & \makecell{Plot \\ biomass} & \makecell{0.142* \\ (0.098, 0.187)}
+    & \makecell{0.142* \\ (0.131, 0.154)} & \makecell{0.074* \\ (0.062, 0.087)}
+    & \makecell{0.074* \\ (0.062, 0.087)} \\
+    
+    \makecell{Plot \\ shade} & \makecell{Shade \\ covariates} & \makecell{1.000* \\ (0.231, 1.768)}
+    & \makecell{1.000* \\ (0.819, 1.180)} & \makecell{0.182* \\ (0.020, 0.345)} 
+    & \makecell{0.182* \\ (0.020, 0.345)} \\
+    
+    \makecell{Plot \\ biomass} & \makecell{Site \\ biomass} & \makecell{1.018* \\ (0.983, 1.053)}
+    & \makecell{1.018* \\ (0.989, 1.047)} & \makecell{0.395* \\ (0.246, 0.544)}
+    & --- \\
+    
+    \makecell{Plot \\ biomass} & \makecell{Plot \\ productivity} & \makecell{0.001 \\ (-0.043, 0.045)}
+    & \makecell{0.001 \\ (-0.043, 0.045)} & \makecell{0.807* \\ (0.779, 0.834)}
+    & \makecell{0.817* \\ (0.789, 0.844)}\\
+    
+    \makecell{Plot \\ productivity} & \makecell{Site \\ productivity} & \makecell{1.012* \\ (0.985, 1.040)}
+    & \makecell{1.012* \\ (0.975, 1.049)} & \makecell{1.011* \\ (0.974, 1.049)}
+    & --- \\
+    
+    \makecell{Plot \\ productivity} & \makecell{Plot sp. \\ richness} & \makecell{0.025* \\ (0.006, 0.043)}
+    & \makecell{0.025* \\ (0.001, 0.048)} & \makecell{0.026 \\ (-0.021, 0.072)}
+    & \makecell{-0.011 \\ (-0.123, 0.101)} \\
+ 
+    \hline
+\end{tabular}
+\caption{The values in the bracket is the 95\% confidence interval}
+\end{adjustwidth}
+
+\section{Discussion}
+
+From the table, we first see that Grace \textit{et al.} 2016's method does not differ from a plain SEM. Parameter estimates are almost identical between these two models. This suggest that Grace \textit{et al.}'s method does not take the hierarchical structure into account as they claimed. 
+
+Second, when specifically consider the hierarchical structure, many estimates changed. In these two models, the plot productivity significantly affects plot biomass, which is not the case in non-hierarchical model. In addition, the effects from plot richness on plot productivity become non-significant. This difference is important as one of the key results in Grace \textit{et al.} 2016 is the feedback loop from productivity to specie richness. Non-significant effect of species richness on productivity breaks the loop and raises a red flag for the field of biodiversity ecosystem functioning. 
+
+In spite of the qualitative difference between estimates, the model with explicit hierarchical structure have higher AIC value (262.61 for the hierarchical SEM excluding site and 93.52 for the hierarchical SEM including site versus 78.60 for the two non-hierarchical models). In addition, the Grace \textit{et al.} 2016 model can predict the data pretty well ($R^2 \sim$  0.6). The difference could partially result from the fact of including site variable. The site variables are all highly correlated with plot variables (correlation coefficient is 0.68, 0.85, and 0.89 for species richness, productivity and biomass respectively). 
+
+In conclusion, Grace \textit{et al.} 2016 provokes an important idea of feedback back between productivity and species richness and offers a nice data set testing this idea in empirical system. However, a proper analysis method is required to extract correct information from the data. 
+
+\bibliographystyle{plain}
+\bibliography{ReAna_Grace2016}
+\end{document}
