@@ -1,9 +1,10 @@
-library(tidyverse)
-library(nlme)
-library(lavaan)
-library(lavaan.survey)
-library(piecewiseSEM)
-library(brms)
+ifelse(!require (betareg), install.packages("betareg"), library(betareg))
+ifelse(!require (tidyverse), install.packages("tidyverse"), library(tidyverse))
+ifelse(!require (nlme), install.packages("nlme"), library(nlme))
+ifelse(!require (lavaan), install.packages("lavaan"), library(lavaan))
+ifelse(!require (lavaan.survey), install.packages("lavaan.survey"), library(lavaan.survey))
+ifelse(!require (piecewiseSEM), install.packages("piecewiseSEM"), library(piecewiseSEM))
+ifelse(!require (brms), install.packages("brms"), library(brms))
 
 
 ### Read in data
